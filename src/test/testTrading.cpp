@@ -33,8 +33,8 @@ BOOST_AUTO_TEST_SUITE(GameCommandSuite)
 struct TradeFixture : public WorldWithGCExecution3P
 {
     boost::array<const GamePlayer*, 3> players;
-    unsigned numHelpers, numWoodcutters, numDonkeys, numBoards, numSaws, numSwords;
-    const nobBaseWarehouse* curWh;
+    unsigned numScouts, numWoodcutters, numDonkeys, numBoards, numSaws;
+    nobBaseWarehouse* curWh;
     TradeFixture()
     {
         curPlayer = 1;
@@ -50,14 +50,14 @@ struct TradeFixture : public WorldWithGCExecution3P
         BOOST_REQUIRE(!players[1]->IsAlly(2));
         curWh = world.GetSpecObj<nobBaseWarehouse>(players[1]->GetHQPos());
         BOOST_REQUIRE(curWh);
+
         // Get start count and check that we have some
-        numHelpers = curWh->GetNumRealFigures(JOB_HELPER);
+        numScouts = curWh->GetNumRealFigures(JOB_SCOUT);
         numWoodcutters = curWh->GetNumRealFigures(JOB_WOODCUTTER);
         numDonkeys = curWh->GetNumRealFigures(JOB_PACKDONKEY);
         numBoards = curWh->GetNumRealWares(GD_BOARDS);
         numSaws = curWh->GetNumRealWares(GD_SAW);
-        numSwords = curWh->GetNumRealWares(GD_SWORD);
-        BOOST_REQUIRE_GT(numHelpers, 10u);
+        BOOST_REQUIRE_EQUAL(numScouts, 2u);
         BOOST_REQUIRE_GT(numDonkeys, 5u);
         BOOST_REQUIRE_GT(numBoards, 10u);
         BOOST_REQUIRE_GT(numSaws, 0u);
@@ -69,7 +69,7 @@ struct TradeFixture : public WorldWithGCExecution3P
 
     void testExpectedWares()
     {
-        BOOST_REQUIRE_EQUAL(curWh->GetNumRealFigures(JOB_HELPER), numHelpers);
+        BOOST_REQUIRE_EQUAL(curWh->GetNumRealFigures(JOB_SCOUT), numScouts);
         BOOST_REQUIRE_EQUAL(curWh->GetNumRealFigures(JOB_WOODCUTTER), numWoodcutters);
         BOOST_REQUIRE_EQUAL(curWh->GetNumRealFigures(JOB_PACKDONKEY), numDonkeys);
         BOOST_REQUIRE_EQUAL(curWh->GetNumRealWares(GD_BOARDS), numBoards);
@@ -82,11 +82,11 @@ struct TradeFixture : public WorldWithGCExecution3P
         RTTR_EXEC_TILL(30 * (numTradeItems + 1), curWh->GetLeavingFigures().size() == 0u);
         // Real count should not be changed
         // But helpers can be produced in the meantime
-        BOOST_REQUIRE_GE(curWh->GetNumRealFigures(JOB_HELPER), numHelpers);
-        numHelpers = curWh->GetNumRealFigures(JOB_HELPER);
+        BOOST_REQUIRE_GE(curWh->GetNumRealFigures(JOB_SCOUT), numScouts);
+        numScouts = curWh->GetNumRealFigures(JOB_SCOUT);
         testExpectedWares();
         // Visual count should match real count
-        BOOST_REQUIRE_EQUAL(curWh->GetNumVisualFigures(JOB_HELPER), numHelpers);
+        BOOST_REQUIRE_EQUAL(curWh->GetNumVisualFigures(JOB_SCOUT), numScouts);
         BOOST_REQUIRE_EQUAL(curWh->GetNumVisualFigures(JOB_WOODCUTTER), numWoodcutters);
         BOOST_REQUIRE_EQUAL(curWh->GetNumVisualFigures(JOB_PACKDONKEY), numDonkeys);
         BOOST_REQUIRE_EQUAL(curWh->GetNumVisualWares(GD_BOARDS), numBoards);
@@ -132,26 +132,23 @@ BOOST_FIXTURE_TEST_CASE(TradeWares, TradeFixture)
     // Each donkey carries a ware and we need a leader
     numBoards -= 2;
     numDonkeys -= 2;
-    numHelpers -= 1;
+    numScouts -= 1;
     testExpectedWares();
     testAfterLeaving(2);
 
     // Let caravan arrive (20GFs per node)
     unsigned distance = world.CalcDistance(curWh->GetPos(), players[0]->GetHQPos()) + 2;
     RTTR_SKIP_GFS(20 * distance);
-    // Some were recruited
-    numHelpers -= numSwords;
-    // And some were produced (at least every 170 GFs)
-    numHelpers += (20 * distance) / 170;
+
     curWh = world.GetSpecObj<nobBaseWarehouse>(players[0]->GetHQPos());
     BOOST_REQUIRE(curWh);
     // Expected amount is our amount + 2 times the stuff send (1 because we did not send anything, and 2 as we received them)
     numBoards += 2 * 2;
     numDonkeys += 2 * 2;
-    numHelpers += 2 * 1;
+    numScouts += 2 * 1;
     // helpers can be produced in the meantime
-    BOOST_REQUIRE_GE(curWh->GetNumRealFigures(JOB_HELPER), numHelpers);
-    numHelpers = curWh->GetNumRealFigures(JOB_HELPER);
+    BOOST_REQUIRE_GE(curWh->GetNumRealFigures(JOB_SCOUT), numScouts);
+    numScouts = curWh->GetNumRealFigures(JOB_SCOUT);
     testExpectedWares();
 }
 
@@ -174,25 +171,22 @@ BOOST_FIXTURE_TEST_CASE(TradeFigures, TradeFixture)
     // For figures we don't need donkeys
     this->TradeOverLand(players[0]->GetHQPos(), GD_NOTHING, JOB_WOODCUTTER, 2);
     numWoodcutters -= 2;
-    numHelpers -= 1;
+    numScouts -= 1;
     testExpectedWares();
     testAfterLeaving(2);
 
     // Let caravan arrive (20GFs per node)
     unsigned distance = world.CalcDistance(curWh->GetPos(), players[0]->GetHQPos()) + 2;
     RTTR_SKIP_GFS(20 * distance);
-    // Some were recruited
-    numHelpers -= numSwords;
-    // And some were produced (at least every 170 GFs)
-    numHelpers += (20 * distance) / 170;
+
     curWh = world.GetSpecObj<nobBaseWarehouse>(players[0]->GetHQPos());
     BOOST_REQUIRE(curWh);
     // Expected amount is our amount + 2 times the stuff send (1 because we did not send anything, and 2 as we received them)
     numWoodcutters += 2 * 2;
-    numHelpers += 2 * 1;
+    numScouts += 2 * 1;
     // helpers can be produced in the meantime
-    BOOST_REQUIRE_GE(curWh->GetNumRealFigures(JOB_HELPER), numHelpers);
-    numHelpers = curWh->GetNumRealFigures(JOB_HELPER);
+    BOOST_REQUIRE_GE(curWh->GetNumRealFigures(JOB_SCOUT), numScouts);
+    numScouts = curWh->GetNumRealFigures(JOB_SCOUT);
     testExpectedWares();
 }
 
@@ -205,7 +199,7 @@ BOOST_FIXTURE_TEST_CASE(TradeToMuch, TradeFixture)
     this->TradeOverLand(players[0]->GetHQPos(), GD_SAW, JOB_NOTHING, numSaws * 2);
     numDonkeys -= numSaws;
     numSaws = 0;
-    numHelpers -= 1;
+    numScouts -= 1;
     testExpectedWares();
 
     // Trade more than donkeys available -> Trade what is possible, limited by donkeys
@@ -213,16 +207,19 @@ BOOST_FIXTURE_TEST_CASE(TradeToMuch, TradeFixture)
     this->TradeOverLand(players[0]->GetHQPos(), GD_BOARDS, JOB_NOTHING, numBoards);
     numBoards -= numDonkeys;
     numDonkeys = 0;
-    numHelpers -= 1;
+    numScouts -= 1;
     testExpectedWares();
 
+    BOOST_REQUIRE_EQUAL(curWh->GetNumVisualWares(GD_BOW), 2u);
+    
     // Trade to many figures
     this->TradeOverLand(players[0]->GetHQPos(), GD_NOTHING, JOB_WOODCUTTER, numWoodcutters * 2);
+    // new scout should be recruited as trade leader
     numWoodcutters = 0;
-    numHelpers -= 1;
     testExpectedWares();
-    // Recruited soldiers
-    numHelpers -= numSwords;
+
+    // check if new scout was recruited
+    BOOST_REQUIRE_EQUAL(curWh->GetNumVisualWares(GD_BOW), 1u);
     testAfterLeaving(20);
 }
 
@@ -234,7 +231,7 @@ BOOST_FIXTURE_TEST_CASE(TradeFail, TradeFixture)
     // Each donkey carries a ware and we need a leader
     numBoards -= 2;
     numDonkeys -= 2;
-    numHelpers -= 1;
+    numScouts -= 1;
     testExpectedWares();
     testAfterLeaving(2);
 
@@ -243,7 +240,7 @@ BOOST_FIXTURE_TEST_CASE(TradeFail, TradeFixture)
 
     // Start a trade that will fail once they leave the bld
     this->TradeOverLand(players[0]->GetHQPos(), GD_NOTHING, JOB_WOODCUTTER, 2);
-    numHelpers -= 1;
+    numScouts -= 1;
     numWoodcutters -= 2;
     testExpectedWares();
 
@@ -260,16 +257,14 @@ BOOST_FIXTURE_TEST_CASE(TradeFail, TradeFixture)
 
     // Let them come in again (walk same way back, assume at most 8 nodes away + same as above)
     RTTR_SKIP_GFS(40 + 20 * 8);
-    // Recruited soldiers
-    numHelpers -= numSwords;
     // Our stuff is back
     numBoards += 2;
     numDonkeys += 2;
-    numHelpers += 1 + 1;
+    numScouts += 1 + 1;
     numWoodcutters += 2;
     // helpers can be produced in the meantime
-    BOOST_REQUIRE_GE(curWh->GetNumRealFigures(JOB_HELPER), numHelpers);
-    numHelpers = curWh->GetNumRealFigures(JOB_HELPER);
+    BOOST_REQUIRE_GE(curWh->GetNumRealFigures(JOB_SCOUT), numScouts);
+    numScouts = curWh->GetNumRealFigures(JOB_SCOUT);
     testExpectedWares();
 }
 
