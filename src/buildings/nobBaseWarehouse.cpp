@@ -1410,7 +1410,7 @@ unsigned nobBaseWarehouse::GetAvailableWaresForTrading(const GoodType gt) const
 {
     // We need a scout as leader or a bow to recruit
     bool noScoutAvailable = !inventory[JOB_SCOUT];
-    if (noScoutAvailable && !inventory[GD_BOW])
+    if (noScoutAvailable && !CanRecruit(JOB_SCOUT))
         return 0;
 
     if (noScoutAvailable && gt == GD_BOW)
@@ -1423,7 +1423,7 @@ unsigned nobBaseWarehouse::GetAvailableWaresForTrading(const GoodType gt) const
 unsigned nobBaseWarehouse::GetAvailableFiguresForTrading(const Job job) const
 {
     // We need a scout as leader or a bow to recruit
-    if(!inventory[JOB_SCOUT] && !inventory[GD_BOW])
+    if(!inventory[JOB_SCOUT] && !CanRecruit(JOB_SCOUT))
         return 0;
 
     if (job == JOB_SCOUT)
