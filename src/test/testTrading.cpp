@@ -274,14 +274,12 @@ BOOST_FIXTURE_TEST_CASE(TradeMessages, TradeFixture)
     PostBox* postbox = world.GetPostMgr().AddPostBox(0);
 
     this->TradeOverLand(players[0]->GetHQPos(), GD_NOTHING, JOB_WOODCUTTER, 2);
-    numHelpers -= 1;
+    numScouts -= 1;
     numWoodcutters -= 2;
     testAfterLeaving(2);
 
     unsigned distance = world.CalcDistance(curWh->GetPos(), players[0]->GetHQPos()) + 2;
     RTTR_SKIP_GFS(20 * distance);
-    // warriors are recruited
-    numHelpers -= numSwords;
 
     const PostMsg* post = postbox->GetMsg(0);
     BOOST_REQUIRE(post);
@@ -291,7 +289,7 @@ BOOST_FIXTURE_TEST_CASE(TradeMessages, TradeFixture)
     BOOST_REQUIRE(msg->GetText().find(players[1]->name) != std::string::npos);
 
     this->TradeOverLand(players[0]->GetHQPos(), GD_BOARDS, JOB_NOTHING, 2);
-    numHelpers -= 1;
+    numScouts -= 1;
     numDonkeys -= 2;
     numBoards -= 2;
     testAfterLeaving(2);
